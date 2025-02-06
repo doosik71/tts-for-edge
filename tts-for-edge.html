@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text-to-Speech with Microsoft Edge</title>
     <style>
+        html, body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
         body {
-            font-size: 1.5em;
-            margin: 2em;
+            font-size: 1.2em;
+            margin: 0 auto 1em auto;
+            max-width: 100em;
         }
         h1 {
           text-align: center;
@@ -16,30 +22,41 @@
           display: inline-block;
           width:10em;
         }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
         textarea {
             width: 100%;
-            min-width: 100%;
-            max-width: 100%;
-            height: 20em;
-            margin: 1em 0em;
-            font-size: 1.5em;
+            flex: 1;
+            padding: 0.5em;
+            line-height: 1.5em;
+            max-width: 100em;
+            font-size: 1.2em;
         }
         select, button {
             font-size: 1em;
             padding: 0.2em 0.5em;
             border-radius: 0.3em;
-            margin: 0.2em;
+            margin: 0.1em;
+        }
+        .option-container {
+            justify-content: center;
+            gap: 0.1em;
+            margin: 0.2em auto 0.2em auto;
         }
         .button-container {
             display: flex;
             justify-content: center;
-            gap: 1em;
+            gap: 0.1em;
+            margin: 0.2em;
         }
     </style>
 </head>
 <body>
     <h1>Text-to-Speech</h1>
-    <div>
+    <div class="option-container">
       <label for="language">Choose a language:</label>
       <select id="language" onchange="populateVoices()">
           <option value="en-US">English (US)</option>
@@ -48,12 +65,28 @@
       <label for="voice">Choose a voice:</label>
       <select id="voice"></select>
     </div>
-    <textarea id="text" placeholder="Type your text here..."></textarea>
     <div class="button-container">
-      <button onclick="speak()">▶️<br/>Speak</button>
+      <button onclick="removeParenthesis()">(⛔)<br/>Remove parenthesis</button>
+      <button onclick="separateSentence()">↩️<br/>Separate Sentence</button>
+      <button onclick="startSpeak()">▶️<br/>Speak</button>
+      <button onclick="pauseSpeach()" id="pauseButton">⏸️<br/>Pause</button>
       <button onclick="stopSpeech()">⏹️<br/>Stop</button>
-    <div>
+    </div>
+    <div class="container">
+        <textarea id="text" placeholder="Type your text here..."></textarea>
+    </div>
+
     <script>
+        function removeParenthesis() {
+            const textInput = document.getElementById("text");
+            textInput.value = textInput.value.replace(/\([^\)]*\)/g, '').replace(/\[[^\]]*\]/g, '').replace(/\s+([.?!])/g, '$1').replace(/  /g, ' ');
+        }
+
+        function separateSentence() {
+            const textInput = document.getElementById("text");
+            textInput.value = textInput.value.replace(/([.?!])\s*(?=[A-Z])/g, "$1\n");
+        }
+
         const synth = window.speechSynthesis;
         const languageSelect = document.getElementById("language");
         const voiceSelect = document.getElementById("voice");
@@ -75,7 +108,7 @@
             }
         }
 
-        function speak() {
+        function startSpeak() {
             const textInput = document.getElementById("text").value.trim();
             if (!textInput) {
                 alert("Please enter some text to speak.");
@@ -91,6 +124,20 @@
             utterance.rate = 1; // 0.1~10
             utterance.volume = 1; // 0~1
             synth.speak(utterance);
+        }
+
+        function pauseSpeach() {
+            const pauseButton = document.getElementById("pauseButton");
+
+            if (synth.speaking) {
+                if (pauseButton.innerText === "⏸️\nPause") {
+                    synth.pause();
+                    pauseButton.innerText = "⏯️\nResume";
+                } else {
+                    synth.resume();
+                    pauseButton.innerText = "⏸️\nPause";
+                }
+            }
         }
 
         function stopSpeech() {
